@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Party Entity Search</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5e6878; --line: #dfe3ea;
+  --accent: #2f5bd3; --accent-soft: #e8eefc; --good: #1f7a4d; --good-soft: #e3f4ea;
+  --bad: #b3322b; --bad-soft: #fbe9e7; --warn: #9a6200; --warn-soft: #fdf1dc;
+  --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151b; --panel: #1b2029; --text: #e4e8ef; --muted: #98a2b3; --line: #2c3340;
+    --accent: #7c9cff; --accent-soft: #1f2a46; --good: #5cc78f; --good-soft: #17301f;
+    --bad: #ff8a80; --bad-soft: #3a1d1b; --warn: #f0b34a; --warn-soft: #3a2c12;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: center; gap: 24px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+header h1 { font-size: 16px; margin: 0; }
+nav { display: flex; gap: 4px; }
+nav button { background: none; border: 0; padding: 6px 12px; border-radius: 6px; color: var(--muted); cursor: pointer; font: inherit; }
+nav button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.stats { margin-left: auto; color: var(--muted); font-size: 13px; }
+main { padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+.grid { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+input[type=search], input[type=text], textarea, select { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+textarea { min-height: 90px; resize: vertical; }
+button.btn { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+button.btn:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--bad); }
+button.good { color: var(--good); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.results { list-style: none; margin: 10px 0 0; padding: 0; max-height: calc(100vh - 190px); overflow: auto; }
+.results li { padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+.results li:hover { background: var(--bg); }
+.results li.sel { border-color: var(--accent); background: var(--accent-soft); }
+.results .n { font-weight: 600; }
+.sub { color: var(--muted); font-size: 12px; }
+.tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); margin-right: 4px; }
+.tag.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.tag.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.tag.accent { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+h2 { font-size: 18px; margin: 0 0 4px; }
+h3 { font-size: 14px; margin: 18px 0 8px; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.empty { color: var(--muted); padding: 24px; text-align: center; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 700px) { .pair { grid-template-columns: 1fr; } }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.review-item { margin-bottom: 12px; }
+.scores { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0; font-size: 13px; }
+dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); width: min(620px, calc(100vw - 32px)); padding: 20px; }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+.reason { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0; cursor: pointer; }
+.reason:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.reason .sub { margin-left: 22px; }
+.err { color: var(--bad); margin-top: 8px; min-height: 1em; }
+.picker { max-height: 200px; overflow: auto; margin-top: 6px; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 420px; }
+.toast.show { opacity: 1; }
+a { color: var(--accent); cursor: pointer; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Party entity search</h1>
+  <nav>
+    <button data-tab="search" class="active">Search</button>
+    <button data-tab="review">Review queue <span id="reviewCount" class="tag"></span></button>
+    <button data-tab="learning">Corrections &amp; learning <span id="corrCount" class="tag"></span></button>
+  </nav>
+  <div class="stats" id="stats"></div>
+</header>
+
+<main>
+  <section id="tab-search" class="grid">
+    <div class="panel">
+      <input id="q" type="search" placeholder="Name, account, address, record or entity ID" autofocus>
+      <ul class="results" id="results"></ul>
+    </div>
+    <div class="panel" id="detail"><div class="empty">Search and select an entity to see its records and why they were matched.</div></div>
+  </section>
+
+  <section id="tab-review" class="hidden">
+    <div class="panel">
+      <h2>Review queue</h2>
+      <p class="sub">Near-miss pairs the model was unsure about. Your decision and explanation are kept and learned from.</p>
+      <div id="review"></div>
+    </div>
+  </section>
+
+  <section id="tab-learning" class="hidden">
+    <div class="grid">
+      <div class="panel" id="rules"></div>
+      <div class="panel"><h2>Corrections</h2><div id="corrections"></div></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <form id="dlgForm">
+    <h2 id="dlgTitle"></h2>
+    <div id="dlgBody" class="sub"></div>
+    <div id="dlgPicker" class="hidden">
+      <h3>Target entity</h3>
+      <input id="dlgSearch" type="search" placeholder="Search the entity to merge with">
+      <ul class="results picker" id="dlgResults"></ul>
+    </div>
+    <h3>Why? (required)</h3>
+    <textarea id="dlgExpl" placeholder="e.g. 'IBM is the abbreviation of International Business Machines' or 'joint account of two different people'"></textarea>
+    <h3>What kind of correction is this?</h3>
+    <div id="dlgReasons"></div>
+    <input id="dlgAuthor" type="text" placeholder="Your name (optional)" style="margin-top:8px">
+    <div class="err" id="dlgErr"></div>
+    <div class="toolbar" style="justify-content:flex-end">
+      <button class="btn" type="button" id="dlgCancel">Cancel</button>
+      <button class="btn primary" id="dlgOk" type="submit" value="ok">Save correction</button>
+    </div>
+  </form>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let REASONS = {}, current = null, searchTimer = null;
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, opts.body ? {method: opts.method || "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(opts.body)} : opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 3500); }
+const pct = v => v == null ? "–" : (v * 100).toFixed(0) + "%";
+
+async function refreshSummary() {
+  const s = await api("/api/summary");
+  REASONS = s.reasons;
+  $("#stats").textContent = `${s.records} records · ${s.entities} entities (${s.multi_record_entities} multi-record)`;
+  $("#reviewCount").textContent = s.review_pairs;
+  $("#corrCount").textContent = s.corrections;
+}
+
+// ------------------------------------------------------------- tabs
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+function showTab(name) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  ["search", "review", "learning"].forEach(t => $("#tab-" + t).classList.toggle("hidden", t !== name));
+  if (name === "review") loadReview();
+  if (name === "learning") loadLearning();
+}
+
+// ------------------------------------------------------------- search
+function entityItem(e) {
+  return `<span class="n">${esc(e.name)}</span> <span class="tag">${e.size} rec</span>${e.corrected ? '<span class="tag accent">corrected</span>' : ""}
+    <div class="sub">${esc(e.entity_id)} · ${esc(e.countries.join(", ") || "no country")} · ${esc(e.party_type)}${e.score != null ? " · match " + e.score : ""}</div>
+    ${e.names.length > 1 ? `<div class="sub">aka ${esc(e.names.slice(1, 4).join(" · "))}</div>` : ""}`;
+}
+async function runSearch() {
+  const q = $("#q").value;
+  const {results} = await api("/api/search?q=" + encodeURIComponent(q));
+  $("#results").innerHTML = results.length ? results.map(e =>
+    `<li data-id="${esc(e.entity_id)}" class="${current === e.entity_id ? "sel" : ""}">${entityItem(e)}</li>`).join("")
+    : `<li class="empty">No entities match.</li>`;
+  $("#results").querySelectorAll("li[data-id]").forEach(li => li.onclick = () => openEntity(li.dataset.id));
+}
+$("#q").oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 200); };
+
+// ------------------------------------------------------------- entity
+function scoreTags(p) {
+  const tags = [`<span class="tag">name ${pct(p.name_sim)}</span>`, `<span class="tag">address ${pct(p.address_sim)}</span>`];
+  if (p.account_match) tags.push(`<span class="tag good">same account</span>`);
+  tags.push(`<span class="tag">score ${pct(p.score)}</span>`, `<span class="tag accent">${esc(p.rule)}</span>`);
+  if (p.learned) p.learned.split(";").forEach(l => tags.push(`<span class="tag warn">learned: ${esc(l)}</span>`));
+  if (p.feedback) tags.push(`<span class="tag ${p.feedback.includes("SPLIT") || p.feedback.includes("BLOCK") ? "bad" : "good"}">${esc(p.feedback)}</span>`);
+  return tags.join("");
+}
+async function openEntity(id) {
+  current = id;
+  showTab("search");
+  document.querySelectorAll("#results li").forEach(li => li.classList.toggle("sel", li.dataset.id === id));
+  let e;
+  try { e = await api("/api/entity/" + encodeURIComponent(id)); }
+  catch (err) { $("#detail").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
+  const multi = e.records.length > 1;
+  $("#detail").innerHTML = `
+    <h2>${esc(e.name)}</h2>
+    <div class="sub"><span class="mono">${esc(e.entity_id)}</span> · ${e.size} record(s) · ${esc(e.party_type)} · ${esc(e.countries.join(", ") || "no country")}</div>
+    <div class="toolbar">
+      <button class="btn" id="bMergeInto">Merge another entity into this…</button>
+      ${multi ? `<button class="btn danger" id="bDetach" disabled>Detach selected (not this party)</button>
+      <button class="btn" id="bMove" disabled>Move selected to another entity…</button>` : ""}
+    </div>
+    <h3>Records</h3>
+    <div class="table-wrap"><table>
+      <tr>${multi ? "<th></th>" : ""}<th>Record</th><th>Name</th><th>Account</th><th>Address</th><th>Country</th></tr>
+      ${e.records.map(r => `<tr>
+        ${multi ? `<td><input type="checkbox" class="rsel" value="${esc(r.record_id)}"></td>` : ""}
+        <td class="mono">${esc(r.record_id)}</td>
+        <td>${esc(r.name)}<div class="sub mono">${esc(r.name_normalized)}</div></td>
+        <td class="mono">${esc(r.acct)}</td>
+        <td>${esc(r.address)}</td>
+        <td title="${esc(r.country_evidence)}">${esc(r.country || "–")}<div class="sub">${esc(r.country_status)}</div></td>
+      </tr>`).join("")}
+    </table></div>
+    ${e.links.length ? `<h3>Why these records are together</h3>
+      <div class="table-wrap"><table><tr><th>Pair</th><th>Evidence</th></tr>
+      ${e.links.map(p => `<tr><td class="mono">${esc(p.left_record_id)} ↔ ${esc(p.right_record_id)}</td><td>${scoreTags(p)}</td></tr>`).join("")}
+      </table></div>` : ""}
+    <h3>Possible matches outside this entity</h3>
+    ${e.near.length ? `<div class="table-wrap"><table><tr><th>Other record</th><th>Evidence</th><th></th></tr>
+      ${e.near.map(p => {
+        const mine = e.records.some(r => r.record_id === p.left_record_id);
+        const otherId = mine ? p.right_record_id : p.left_record_id, otherName = mine ? p.right_name : p.left_name;
+        const otherEnt = mine ? p.right_entity_id : p.left_entity_id, myRec = mine ? p.left_record_id : p.right_record_id;
+        const decided = p.feedback === "USER_SPLIT";
+        return `<tr><td>${esc(otherName)}<div class="sub"><span class="mono">${esc(otherId)}</span> in <a data-open="${esc(otherEnt)}">${esc(otherEnt)}</a> · vs ${esc(myRec)}</div></td>
+          <td>${scoreTags(p)}</td>
+          <td style="white-space:nowrap">${decided ? "" : `<button class="btn good" data-merge="${esc(otherEnt)}">Same party</button>
+            <button class="btn danger" data-split="${esc(myRec)}|${esc(otherId)}">Different</button>`}</td></tr>`;
+      }).join("")}</table></div>` : `<div class="sub">None.</div>`}
+    ${e.corrections.length ? `<h3>Corrections affecting this entity</h3>${e.corrections.map(correctionCard).join("")}` : ""}`;
+
+  const selected = () => [...document.querySelectorAll(".rsel:checked")].map(c => c.value);
+  document.querySelectorAll(".rsel").forEach(c => c.onchange = () => {
+    const n = selected().length, ok = n > 0 && n < e.records.length;
+    $("#bDetach").disabled = !ok; $("#bMove").disabled = !ok;
+  });
+  $("#bMergeInto").onclick = () => correctionDialog({
+    title: "Merge another entity into " + e.name, action: "merge", pick: true, exclude: e.entity_id,
+    body: "Pick the entity that is the same party as this one.",
+    build: target => ({action: "merge", record_ids: target.members, against_entity: e.entity_id}),
+    after: () => openEntity(e.entity_id)});
+  if (multi) {
+    $("#bDetach").onclick = () => {
+      const ids = selected();
+      correctionDialog({title: "Detach " + ids.join(", "), action: "split",
+        body: `These records are <b>not</b> the same party as the rest of ${esc(e.entity_id)}. They will form their own entity and will be kept apart from these records from now on.`,
+        build: () => ({action: "split", record_ids: ids, against_entity: e.entity_id}),
+        after: res => openEntity(res.entity_ids[e.records.find(r => !ids.includes(r.record_id)).record_id])});
+    };
+    $("#bMove").onclick = () => {
+      const ids = selected();
+      correctionDialog({title: "Move " + ids.join(", "), action: "merge", pick: true, exclude: e.entity_id,
+        body: "Pick the entity these records really belong to. They are detached from this entity and linked to the target.",
+        build: target => ({action: "move", record_ids: ids, against_entity: target.entity_id}),
+        after: res => openEntity(res.entity_ids[ids[0]])});
+    };
+  }
+  $("#detail").querySelectorAll("[data-open]").forEach(a => a.onclick = () => openEntity(a.dataset.open));
+  $("#detail").querySelectorAll("[data-merge]").forEach(b => b.onclick = () => {
+    const other = b.dataset.merge;
+    correctionDialog({title: "Same party: merge " + other + " into this entity", action: "merge",
+      body: "All records of " + esc(other) + " will join " + esc(e.entity_id) + ".",
+      build: () => ({action: "merge", record_ids: [], from_entity: other, against_entity: e.entity_id}),
+      after: () => openEntity(e.entity_id)});
+  });
+  $("#detail").querySelectorAll("[data-split]").forEach(b => b.onclick = () => {
+    const [mine, other] = b.dataset.split.split("|");
+    correctionDialog({title: `Different parties: ${mine} vs ${other}`, action: "split",
+      body: "These two records will never be put in the same entity.",
+      build: () => ({action: "split", record_ids: [other], against: [mine]}),
+      after: () => openEntity(e.entity_id)});
+  });
+}
+
+// ------------------------------------------------------------- correction dialog
+let dlgCfg = null, dlgTarget = null, reasonTouched = false, suggestTimer = null, pickTimer = null;
+function renderReasons(action, selectedReason) {
+  const rs = REASONS[action];
+  $("#dlgReasons").innerHTML = Object.entries(rs).map(([k, v]) => `<label class="reason">
+      <input type="radio" name="reason" value="${k}" ${k === selectedReason ? "checked" : ""}> ${esc(v.label)}
+      <div class="sub">Learns: ${esc(v.learned)}</div></label>`).join("");
+  $("#dlgReasons").querySelectorAll("input").forEach(i => i.onchange = () => reasonTouched = true);
+}
+async function correctionDialog(cfg) {
+  dlgCfg = cfg; dlgTarget = null; reasonTouched = false;
+  $("#dlgTitle").textContent = cfg.title;
+  $("#dlgBody").innerHTML = cfg.body || "";
+  $("#dlgExpl").value = ""; $("#dlgErr").textContent = "";
+  $("#dlgPicker").classList.toggle("hidden", !cfg.pick);
+  $("#dlgSearch").value = ""; $("#dlgResults").innerHTML = "";
+  renderReasons(cfg.action, Object.keys(REASONS[cfg.action]).at(-1));
+  $("#dlg").showModal();
+  (cfg.pick ? $("#dlgSearch") : $("#dlgExpl")).focus();
+}
+$("#dlgExpl").oninput = () => {
+  if (reasonTouched) return;
+  clearTimeout(suggestTimer);
+  suggestTimer = setTimeout(async () => {
+    const {reason} = await api(`/api/suggest-reason?action=${dlgCfg.action}&text=${encodeURIComponent($("#dlgExpl").value)}`);
+    const input = $(`#dlgReasons input[value="${reason}"]`);
+    if (input && !reasonTouched) input.checked = true;
+  }, 250);
+};
+$("#dlgSearch").oninput = () => {
+  clearTimeout(pickTimer);
+  pickTimer = setTimeout(async () => {
+    const {results} = await api("/api/search?limit=15&q=" + encodeURIComponent($("#dlgSearch").value));
+    const list = results.filter(r => r.entity_id !== dlgCfg.exclude);
+    $("#dlgResults").innerHTML = list.map(e => `<li data-id="${esc(e.entity_id)}">${entityItem(e)}</li>`).join("") || `<li class="empty">No entities.</li>`;
+    $("#dlgResults").querySelectorAll("li[data-id]").forEach(li => li.onclick = () => {
+      dlgTarget = li.dataset.id;
+      $("#dlgResults").querySelectorAll("li").forEach(x => x.classList.toggle("sel", x === li));
+    });
+  }, 200);
+};
+$("#dlgCancel").onclick = () => $("#dlg").close();
+$("#dlgSearch").onkeydown = ev => { if (ev.key === "Enter") ev.preventDefault(); };
+$("#dlgForm").onsubmit = async ev => {
+  ev.preventDefault();
+  const explanation = $("#dlgExpl").value.trim();
+  if (!explanation) { $("#dlgErr").textContent = "Please explain why: the explanation is what the resolver learns from."; return; }
+  if (dlgCfg.pick && !dlgTarget) { $("#dlgErr").textContent = "Pick the target entity first."; return; }
+  let target = null;
+  if (dlgCfg.pick) target = await api("/api/entity/" + encodeURIComponent(dlgTarget)).then(d => ({entity_id: d.entity_id, members: d.records.map(r => r.record_id)}));
+  const req = dlgCfg.build(target);
+  if (req.from_entity) {
+    const d = await api("/api/entity/" + encodeURIComponent(req.from_entity));
+    req.record_ids = d.records.map(r => r.record_id); delete req.from_entity;
+  }
+  req.explanation = explanation;
+  req.reason = $('#dlgReasons input:checked')?.value;
+  req.author = $("#dlgAuthor").value;
+  $("#dlgOk").disabled = true;
+  try {
+    const res = await api("/api/corrections", {body: req});
+    $("#dlg").close();
+    toast(`Saved ${res.corrections.map(c => c.id).join(", ")}. Learned: ${res.corrections[0].learned}`);
+    await refreshSummary(); runSearch();
+    await dlgCfg.after?.(res);
+  } catch (err) { $("#dlgErr").textContent = err.message; }
+  finally { $("#dlgOk").disabled = false; }
+};
+
+// ------------------------------------------------------------- review queue
+function recordCard(r) {
+  return `<div class="card"><b>${esc(r.name)}</b> <span class="sub mono">${esc(r.record_id)}</span>
+    <div class="sub">acct <span class="mono">${esc(r.acct || "–")}</span> · ${esc(r.country || "no country")}</div>
+    <div>${esc(r.address)}</div>
+    <div class="sub">entity <a data-open="${esc(r.entity_id)}">${esc(r.entity_id)}</a></div></div>`;
+}
+async function loadReview() {
+  const {pairs} = await api("/api/review");
+  $("#review").innerHTML = pairs.length ? pairs.map((p, i) => `<div class="review-item card">
+      <div class="pair">${recordCard(p.left)}${recordCard(p.right)}</div>
+      <div class="scores">${scoreTags(p)}</div>
+      <div class="toolbar"><button class="btn good" data-i="${i}" data-a="merge">Same party</button>
+        <button class="btn danger" data-i="${i}" data-a="split">Different parties</button></div></div>`).join("")
+    : `<div class="empty">Nothing to review.</div>`;
+  $("#review").querySelectorAll("[data-open]").forEach(a => a.onclick = () => openEntity(a.dataset.open));
+  $("#review").querySelectorAll("button[data-i]").forEach(b => b.onclick = () => {
+    const p = pairs[+b.dataset.i], merge = b.dataset.a === "merge";
+    correctionDialog({title: `${merge ? "Same party" : "Different parties"}: ${p.left.name} / ${p.right.name}`,
+      action: merge ? "merge" : "split",
+      body: merge ? "The two records' entities will be merged." : "These two records will never be put in the same entity.",
+      build: () => ({action: merge ? "merge" : "split", record_ids: [p.right_record_id], against: [p.left_record_id]}),
+      after: loadReview});
+  });
+}
+
+// ------------------------------------------------------------- learning
+function correctionCard(c) {
+  const names = ids => ids.map(r => `${esc(c.names[r] || "")} <span class="mono sub">${esc(r)}</span>`).join(", ");
+  return `<div class="card" style="margin-bottom:8px">
+    <span class="tag ${c.action === "split" ? "bad" : "good"}">${c.action}</span> <span class="mono sub">${esc(c.id)}</span>
+    <span class="sub">${esc(c.created.replace("T", " "))}${c.author ? " · " + esc(c.author) : ""}</span>
+    <div style="margin:6px 0">${names(c.record_ids)} <b>${c.action === "split" ? "≠" : "="}</b> ${names(c.against)}</div>
+    <div>“${esc(c.explanation)}”</div>
+    <div class="sub">${esc(c.reason_label)}. Learns: ${esc(c.learned)}</div>
+    <div class="toolbar">${c.entities.map(id => `<a data-open="${esc(id)}" class="mono">${esc(id)}</a>`).join(" ")}
+      <button class="btn danger" data-undo="${esc(c.id)}" style="margin-left:auto">Undo</button></div></div>`;
+}
+document.addEventListener("click", async ev => {
+  const undo = ev.target.closest("[data-undo]");
+  if (undo) {
+    if (!confirm("Undo correction " + undo.dataset.undo + "? Its constraints and learned rules are removed.")) return;
+    await api("/api/corrections/" + encodeURIComponent(undo.dataset.undo), {method: "DELETE"});
+    toast("Removed " + undo.dataset.undo);
+    await refreshSummary(); runSearch();
+    if (!$("#tab-learning").classList.contains("hidden")) loadLearning(); else if (current) openEntity(current);
+  }
+  const open = ev.target.closest("#corrections [data-open]");
+  if (open) openEntity(open.dataset.open);
+});
+async function loadLearning() {
+  const d = await api("/api/corrections");
+  const r = d.rules, cal = d.calibration;
+  const list = (items, fmt) => items.length ? `<ul>${items.map(i => `<li>${fmt(i)}</li>`).join("")}</ul>` : `<div class="sub">None yet.</div>`;
+  $("#rules").innerHTML = `<h2>What the resolver has learned</h2>
+    <h3>Name aliases <span class="sub">(treated as the same name)</span></h3>${list(r.name_aliases, g => g.map(esc).join(" = "))}
+    <h3>Shared accounts <span class="sub">(no longer evidence)</span></h3>${list(r.shared_accounts, a => `<span class="mono">${esc(a)}</span>`)}
+    <h3>Ambiguous names <span class="sub">(need account or address too)</span></h3>${list(r.ambiguous_names, esc)}
+    <h3>Model vs your labels</h3>
+    ${cal.labelled_pairs ? `<div>${cal.labelled_pairs} labelled pair(s).</div>
+      <div>Base model agrees on <b>${pct(cal.base_agreement)}</b>; with learned rules <b>${pct(cal.learned_agreement)}</b>
+      <span class="sub">(constraints aside, i.e. how well the lessons generalise)</span>.</div>
+      ${cal.suggested_score_threshold != null && cal.suggested_score_threshold !== cal.current_score_threshold
+        ? `<div class="sub">Your labels fit a weighted-score threshold of <b>${cal.suggested_score_threshold}</b> better than the current ${cal.current_score_threshold}. Review before changing MatchConfig.score_threshold.</div>`
+        : `<div class="sub">Current score threshold (${cal.current_score_threshold}) fits your labels${cal.suggested_score_threshold == null ? " (need ≥5 labels with both outcomes for a suggestion)" : ""}.</div>`}`
+      : `<div class="sub">No corrections yet.</div>`}`;
+  $("#corrections").innerHTML = d.corrections.length ? d.corrections.map(correctionCard).join("") : `<div class="empty">No corrections yet. Fix an entity from Search or the Review queue.</div>`;
+}
+
+refreshSummary().then(runSearch);
+</script>
+</body>
+</html>

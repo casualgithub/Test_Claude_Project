@@ -1,0 +1,32 @@
+record_id,name,acct,address,country_code
+R001,Acme Trading Limited,000123456,"12 Baker Street, London W1U 3BW, United Kingdom",GB
+R002,ACME TRADING LTD.,123456,"12 Baker St, London W1U 3BW",
+R003,Acme Trading Ltd,987654,"12 Baker Street, London, W1U 3BW, UK",GB
+R004,John A. Smith,55501234,"350 Fifth Avenue, New York, NY 10118, USA",US
+R005,"Smith, John",55501234,"350 5th Ave, New York NY 10118",
+R006,John Smith,77700001,"1200 Main St, Dallas, TX 75201",US
+R007,Siemens AG,DE-4411,"Werner-von-Siemens-Straße 1, 80333 München, Deutschland",DE
+R008,SIEMENS AKTIENGESELLSCHAFT,DE4411,"Werner von Siemens Str. 1, 80333 Munich, Germany",
+R009,Tata Consultancy Services Pvt Ltd,IN-9988,"TCS House, Raveline Street, Fort, Mumbai 400001, Maharashtra",US
+R010,Tata Consultancy Services Private Limited,,"TCS House, Raveline St, Fort, Mumbai - 400001, India",IN
+R011,Toyota Motor Corporation,JP-1001,〒471-8571 愛知県豊田市トヨタ町1番地,
+R012,Toyota Motor Corp,JP-1001,"1 Toyota-cho, Toyota City, Aichi 471-8571, Japan",JP
+R013,Maple Leaf Foods Inc,CA-3301,"6985 Financial Drive, Mississauga, ON L5N 0A1",
+R014,Maple Leaf Foods Incorporated,CA-3301,"6985 Financial Dr, Mississauga ON L5N0A1, Canada",CA
+R015,Emirates Logistics LLC,AE-777,"Office 1204, Business Bay, Dubai, UAE",
+R016,Emirates Logistics L.L.C.,AE-777,Office 1204 Business Bay Dubai,AE
+R017,Banco do Brasil S.A.,BR-2020,"SAUN Quadra 5, Lote B, Brasília - DF, 70040-912, Brasil",BRA
+R018,Maria Garcia,ES-5501,"Calle de Alcalá 45, 28014 Madrid, España",ES
+R019,María García,,"C/ Alcala 45, 28014 Madrid",
+R020,Maria Garcia,MX-8812,"Av. Paseo de la Reforma 222, Ciudad de México, CDMX 06600, México",MX
+R021,Wong Kar Holdings Pte Ltd,SG-4040,"1 Raffles Place, #20-01, Singapore 048616",
+R022,Wong Kar Holdings Private Limited,SG-4040,1 Raffles Place #20-01 Singapore,SG
+R023,Global Widgets Pty Ltd,AU-1200,"Level 10, 1 Martin Place, Sydney NSW 2000",
+R024,Global Widgets Pty Limited,,"Level 10, 1 Martin Pl, Sydney NSW 2000, Australia",AU
+R025,Global Widgets Inc,US-1200,"500 Market St, San Francisco, CA 94105",US
+R026,Jean Dupont,FR-7788,"15 Rue de Rivoli, 75001 Paris, France",FR
+R027,DUPONT JEAN,FR-7788,15 rue de Rivoli 75001 Paris,
+R028,Hans Müller,CH-3030,"Bahnhofstrasse 10, 8001 Zürich, Switzerland",DE
+R029,Hans Mueller,CH-3030,"Bahnhofstr. 10, 8001 Zurich",Switzerland
+R030,Unknown Party,,PO Box 123,
+R031,Namib Mining (Pty) Ltd,NA-555,"14 Independence Avenue, Windhoek, Namibia",NA

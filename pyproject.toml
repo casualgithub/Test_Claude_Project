@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "party-er"
+version = "0.1.0"
+description = "Party entity resolution with address-based country inference"
+requires-python = ">=3.10"
+dependencies = ["pandas>=2.0", "rapidfuzz>=3.0", "pycountry>=22.3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+excel = ["openpyxl>=3.1"]
+
+[project.scripts]
+party-er = "party_er.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["party_er*"]
+
+[tool.setuptools.package-data]
+"party_er.web" = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

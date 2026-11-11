@@ -1,0 +1,6 @@
+pandas>=2.0
+rapidfuzz>=3.0
+pycountry>=22.3
+pytest>=7.0
+# optional, only for .xlsx input:
+# openpyxl>=3.1

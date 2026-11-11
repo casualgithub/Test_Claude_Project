@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/c/Users/casua/AppData/Local/Programs/Python/Python312/python.exe -m pytest:*)",
+      "Bash(/c/Users/casua/AppData/Local/Programs/Python/Python312/python.exe -m party_er:*)"
+    ],
+    "deny": [
+      "Read(./**/__pycache__/**)",
+      "Read(./.pytest_cache/**)",
+      "Read(./**/*.egg-info/**)"
+    ]
+  }
+}
